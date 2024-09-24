@@ -1,7 +1,7 @@
 "use client";
 import Image from 'next/image';
 import logoimg from "./logo.webp";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db } from './firebaseConnector'; // Ensure you import your Firebase configuration
 import { collection, getDocs } from 'firebase/firestore'; // Firestore functions
 import { useRouter } from 'next/navigation'; // Import useRouter for navigation
@@ -14,7 +14,9 @@ const DemoVideos = () => {
     message: ''
   });
   
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu
   const router = useRouter(); // Initialize useRouter
+  const dropdownRef = useRef(null); // Ref for the dropdown menu
 
   // Handle input change for contact form
   const handleInputChange = (e) => {
@@ -62,11 +64,25 @@ const DemoVideos = () => {
     loadVideos();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-primary text-white">
       {/* Header Section */}
       <header className="sticky top-0 z-50 bg-primary shadow-lg">
-        <div className="container mx-auto flex items-center justify-between p-5">
+        <div className="container mx-auto flex items-center justify-between p-5 relative">
           <div className="flex items-center space-x-3">
             {/* Logo Section */}
             <Image
@@ -79,23 +95,56 @@ const DemoVideos = () => {
             <span className="text-2xl font-bold text-white">Success Wave</span>
           </div>
 
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden flex items-center justify-center text-lg text-white"
+            onClick={() => setIsMenuOpen(!isMenuOpen)} // Toggle the menu
+          >
+            {isMenuOpen ? '✖' : '☰'} {/* Icon for menu open/close */}
+          </button>
+
           {/* Navigation Links */}
-          <nav className="flex items-center space-x-6">
-            <a href="#home" className="text-lg text-white hover:text-accent transition duration-300">
+          <nav className={`hidden md:flex md:flex-row md:items-center`}>
+            <a href="#home" className="text-lg text-white hover:text-accent transition duration-300 p-2">
               Home
             </a>
-            <a href="#demos" className="text-lg text-white hover:text-accent transition duration-300">
+            <a href="#demos" className="text-lg text-white hover:text-accent transition duration-300 p-2">
               Demo Videos
             </a>
-            <a href="#contact" className="text-lg text-white hover:text-accent transition duration-300">
+            <a href="#contact" className="text-lg text-white hover:text-accent transition duration-300 p-2">
               Contact Us
             </a>
             <button 
               onClick={() => router.push('/admin')} // Navigate to the admin page
-              className="text-lg text-white hover:text-accent transition duration-300">
+              className="text-lg text-white hover:text-accent transition duration-300 p-2">
               Admin Page
             </button>
           </nav>
+
+          {/* Dropdown for Mobile Menu */}
+          {isMenuOpen && (
+            <div ref={dropdownRef} className="absolute right-0 mt-2 bg-white text-primary rounded-lg shadow-lg z-20 w-40">
+              <button 
+                onClick={() => setIsMenuOpen(false)} // Close button
+                className="block text-right px-4 py-2 text-lg font-bold text-red-500 hover:bg-gray-200 transition duration-300 w-full">
+                Close
+              </button>
+              <a href="#home" className="block px-4 py-2 hover:bg-gray-200 transition duration-300">
+                Home
+              </a>
+              <a href="#demos" className="block px-4 py-2 hover:bg-gray-200 transition duration-300">
+                Demo Videos
+              </a>
+              <a href="#contact" className="block px-4 py-2 hover:bg-gray-200 transition duration-300">
+                Contact Us
+              </a>
+              <button 
+                onClick={() => router.push('/admin')} // Navigate to the admin page
+                className="block w-full text-left px-4 py-2 hover:bg-gray-200 transition duration-300">
+                Admin Page
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -128,6 +177,7 @@ const DemoVideos = () => {
                 src={`https://www.youtube.com/embed/${video.link}?controls=0&modestbranding=1&rel=0`}
                 title={video.description}
                 allowFullScreen
+                className="aspect-video"
               ></iframe>
               <div className="p-4">
                 <h3 className="font-bold text-lg">{video.description}</h3>
