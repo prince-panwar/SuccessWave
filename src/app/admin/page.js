@@ -92,7 +92,7 @@ const AdminPage = () => {
               value={videoData.link}
               onChange={(e) => setVideoData({ ...videoData, link: e.target.value })}
               required
-              className="border p-2 rounded w-full mb-2"
+              className="border p-2 rounded w-full mb-2 text-black"
             />
             <input
               type="text"
@@ -100,8 +100,8 @@ const AdminPage = () => {
               value={videoData.description}
               onChange={(e) => setVideoData({ ...videoData, description: e.target.value })}
               required
-              className="border p-2 rounded w-full mb-2"
-            />
+              className="border p-2 rounded w-full mb-2 text-black"
+            /> 
             <button type="submit" className="bg-primary text-white py-2 px-4 rounded w-full">
               Submit Video
             </button>
