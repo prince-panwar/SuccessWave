@@ -68,17 +68,26 @@ const DemoVideos = () => {
     },[])
      
     
-      const handleAdminLogin = (e) => {
+    const handleAdminLogin = (e) => {
         e.preventDefault();
         const { id, password } = adminCredentials;
-    
-        if (id === 'admin' && password === 'password123') { // Replace with your credentials
+      
+        // Accessing the environment variables
+        const adminId = process.env.NEXT_PUBLIC_ADMIN_ID;
+        const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASS;
+      
+        console.log("Admin ID: ", adminId);
+        console.log("Admin Pass: ", adminPass);
+      
+        // Check if the credentials match
+        if (id === adminId && password === adminPass) {
           setIsAuthenticated(true);
           setIsAdminModalOpen(false);
         } else {
           alert('Invalid credentials');
         }
       };
+      
     
       const handleVideoSubmit = async (e) => {
         e.preventDefault();
