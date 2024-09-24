@@ -136,7 +136,7 @@ const AdminPage = () => {
               value={loginData.email}
               onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
               required
-              className="border p-2 rounded w-full mb-2"
+              className="border p-2 rounded w-full mb-2 text-black"
             />
             <input
               type="password"
@@ -144,7 +144,7 @@ const AdminPage = () => {
               value={loginData.password}
               onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
               required
-              className="border p-2 rounded w-full mb-2"
+              className="border p-2 rounded w-full mb-2 text-black"
             />
             <button type="submit" className="bg-primary text-white py-2 px-4 rounded w-full">
               Login
