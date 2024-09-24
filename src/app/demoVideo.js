@@ -1,123 +1,67 @@
-"use client"
-// components/DemoVideos.js
+"use client";
 import Image from 'next/image';
-import logoimg from "./logo.webp"
-import { useState,useEffect } from 'react';
+import logoimg from "./logo.webp";
+import { useState, useEffect } from 'react';
+import { db } from './firebaseConnector'; // Ensure you import your Firebase configuration
+import { collection, getDocs } from 'firebase/firestore'; // Firestore functions
+import { useRouter } from 'next/navigation'; // Import useRouter for navigation
+
 const DemoVideos = () => {
-    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-    const [adminCredentials, setAdminCredentials] = useState({ id: '', password: '' });
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [videoData, setVideoData] = useState({ link: '', description: '' });
-    const [videos, setVideos] = useState([]); // For storing the videos
-    const [formData, setFormData] = useState({
+  const [videos, setVideos] = useState([]); // For storing the videos
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  
+  const router = useRouter(); // Initialize useRouter
+
+  // Handle input change for contact form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      alert('Message sent successfully!');
+      setFormData({
         name: '',
         email: '',
         message: ''
       });
-    
-      const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-      };
-    
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-    
-        const response = await fetch('/api/contact', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
-    
-        if (response.ok) {
-          alert('Message sent successfully!');
-          setFormData({
-            name: '',
-            email: '',
-            message: ''
-          });
-        } else {
-          alert('Failed to send message.');
-        }
-      };
-      const loadVideos = async () => {
-        try {
-          const response = await fetch('/api/video');
-      
-          if (!response.ok) {
-            // If the response is not ok, throw an error with the status text
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-      
-          // Check if the response has content before parsing
-          const data = await response.text();  // Get raw text response
-          const videos = data ? JSON.parse(data) : [];  // Parse the JSON if there is data, otherwise use an empty array
-      
-          setVideos(videos);  // Set the parsed videos data to state
-          console.log(videos);  // Log the video data for debugging
-        } catch (error) {
-          console.error('Error loading videos:', error);
-        }
-      };
-      
-    
-    useEffect(()=>{
-    loadVideos()
-    },[])
-     
-    
-    const handleAdminLogin = (e) => {
-        e.preventDefault();
-        const { id, password } = adminCredentials;
-      
-        // Accessing the environment variables
-        const adminId = process.env.NEXT_PUBLIC_ADMIN_ID;
-        const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASS;
-      
-        console.log("Admin ID: ", adminId);
-        console.log("Admin Pass: ", adminPass);
-      
-        // Check if the credentials match
-        if (id === adminId && password === adminPass) {
-          setIsAuthenticated(true);
-          setIsAdminModalOpen(false);
-        } else {
-          alert('Invalid credentials');
-        }
-      };
-      
-    
-      const handleVideoSubmit = async (e) => {
-        e.preventDefault();
-    
-        const response = await fetch('/api/saveVideo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(videoData),
-        });
-    
-        if (response.ok) {
-          alert('Video added successfully');
-          setVideoData({ link: '', description: '' });
-          loadVideos(); // Reload videos after saving
-        } else {
-          alert('Failed to add video');
-        }
-      };
-    
-      // Open the admin modal
-  const openAdminModal = () => {
-    setIsAdminModalOpen(true);
+    } else {
+      alert('Failed to send message.');
+    }
   };
 
-  // Close modal (either Admin Login or Video Modal)
-  const closeModal = () => {
-    setIsAdminModalOpen(false);
-    setIsAuthenticated(false);
+  const loadVideos = async () => {
+    try {
+      const videoCollection = collection(db, "videos"); // Reference to the 'videos' collection
+      const videoSnapshot = await getDocs(videoCollection); // Fetch all videos
+      const videoList = videoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Map the documents to an array
+      
+      setVideos(videoList); // Set the parsed videos data to state
+      console.log(videoList); // Log the video data for debugging
+    } catch (error) {
+      console.error('Error loading videos:', error);
+    }
   };
-    
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
   return (
     <div className="min-h-screen bg-primary text-white">
       {/* Header Section */}
@@ -146,13 +90,10 @@ const DemoVideos = () => {
             <a href="#contact" className="text-lg text-white hover:text-accent transition duration-300">
               Contact Us
             </a>
-
-            {/* Admin Button */}
-            <button
-              className="bg-accent text-white font-bold py-2 px-4 rounded hover:bg-teal-700"
-              onClick={openAdminModal}
-            >
-              Admin
+            <button 
+              onClick={() => router.push('/admin')} // Navigate to the admin page
+              className="text-lg text-white hover:text-accent transition duration-300">
+              Admin Page
             </button>
           </nav>
         </div>
@@ -173,179 +114,82 @@ const DemoVideos = () => {
         </p>
       </main>
 
-     {/* Demo Videos Section */}
-    
+      {/* Demo Videos Section */}
+      <section id="demos" className="bg-white text-primary py-16 px-4 md:px-16">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">Our Demo Videos</h2>
 
-  <section id="demos" className="bg-white text-primary py-16 px-4 md:px-16">
-  <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">Our Demo Videos</h2>
-
-  {/* List of Videos */}
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    {videos.map((video, index) => (
-      <div key={index} className="bg-white p-4 rounded-lg shadow-lg">
-        {/* Adjust aspect ratio for taller height */}
-        <div className="relative pb-[75%]"> {/* For 4:3 aspect ratio (height increased) */}
-          <iframe
-            className="absolute top-0 left-0 w-full h-full"
-            src={`https://www.youtube.com/embed/${video.link}?controls=0&modestbranding=1&rel=0`}
-            allow="encrypted-media"
-            allowFullScreen
-          ></iframe>
+        {/* List of Videos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {videos.map((video) => (
+            <div key={video.id} className="border rounded-lg overflow-hidden shadow-lg">
+              <iframe
+                width="100%"
+                height="200"
+                src={`https://www.youtube.com/embed/${video.link}?controls=0&modestbranding=1&rel=0`}
+                title={video.description}
+                allowFullScreen
+              ></iframe>
+              <div className="p-4">
+                <h3 className="font-bold text-lg">{video.description}</h3>
+              </div>
+            </div>
+          ))}
         </div>
-        <p className="mt-4 text-gray-700 truncate">
-          {video.description.length > 100
-            ? `${video.description.substring(0, 100)}...`
-            : video.description}
-        </p>
-      </div>
-    ))}
-  </div>
-</section>
+      </section>
 
-
-      
-       {/* Contact Us Section */}
-       <footer id="contact" className="bg-accent py-8 text-center">
-        <h3 className="text-xl font-bold mb-4">Contact Us</h3>
-        <form className="max-w-lg mx-auto p-4 bg-white rounded-lg shadow-lg" onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-left text-gray-700 font-bold mb-2" htmlFor="name">
+      {/* Contact Form Section */}
+      <section id="contact" className="bg-gray-100 text-primary py-16 px-4 md:px-16">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">Contact Us</h2>
+        <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded shadow-md space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
               Name
             </label>
             <input
               type="text"
-              id="name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded text-black bg-white"
               required
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary"
             />
           </div>
-
-          <div className="mb-4">
-            <label className="block text-left text-gray-700 font-bold mb-2" htmlFor="email">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
               type="email"
-              id="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded text-black bg-white"
               required
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary"
             />
           </div>
-
-          <div className="mb-4">
-            <label className="block text-left text-gray-700 font-bold mb-2" htmlFor="message">
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-gray-700">
               Message
             </label>
             <textarea
-              id="message"
               name="message"
               value={formData.message}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded text-black bg-white"
-              rows="5"
               required
-            />
+              rows="4"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary"
+            ></textarea>
           </div>
-
-          <button
-            type="submit"
-            className="bg-primary text-white font-bold py-2 px-4 rounded hover:bg-teal-700"
-          >
+          <button type="submit" className="bg-primary text-white py-2 px-4 rounded">
             Send Message
           </button>
         </form>
+      </section>
 
-        <p className="mt-4 text-light">&copy; 2024 Success Wave. All rights reserved.</p>
+      {/* Footer Section */}
+      <footer className="bg-primary py-4">
+        <p className="text-center text-white">&copy; 2024 Success Wave. All rights reserved.</p>
       </footer>
-     {/* Admin Login Modal */}
-     {isAdminModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-black" onClick={closeModal}>
-              &times;
-            </button>
-            <h2 className="text-xl font-bold mb-4 text-black">Admin Login</h2>
-            <form onSubmit={handleAdminLogin}>
-              <div className="mb-4">
-                <label className="block text-left text-black font-bold mb-2" htmlFor="adminId">
-                  Admin ID
-                </label>
-                <input
-                  id="adminId"
-                  type="text"
-                  className="w-full p-2 border border-gray-300 rounded text-black"
-                  value={adminCredentials.id}
-                  onChange={(e) => setAdminCredentials({ ...adminCredentials, id: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-left text-black font-bold mb-2" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  className="w-full p-2 border border-gray-300 rounded text-black"
-                  value={adminCredentials.password}
-                  onChange={(e) => setAdminCredentials({ ...adminCredentials, password: e.target.value })}
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-accent text-white font-bold py-2 px-4 rounded w-full hover:bg-teal-700"
-              >
-                Login
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Admin Modal for Adding Video */}
-     {/* Admin Modal for Adding Video */}
-{isAuthenticated && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
-      <button className="absolute top-2 right-2 text-gray-500 hover:text-black" onClick={closeModal}>
-        &times;
-      </button>
-      <h2 className="text-xl font-bold mb-4 text-black">Add New Video</h2>
-      <form onSubmit={handleVideoSubmit}>
-        <div className="mb-4">
-          <label className="block text-left text-black font-bold mb-2">Video Link</label>
-          <input
-            type="text"
-            className="w-full p-2 border border-gray-300 rounded text-black" // Ensured text-black is applied
-            value={videoData.link}
-            onChange={(e) => setVideoData({ ...videoData, link: e.target.value })}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-left text-black font-bold mb-2">Description</label>
-          <textarea
-            className="w-full p-2 border border-gray-300 rounded text-black" // Ensured text-black is applied
-            value={videoData.description}
-            onChange={(e) => setVideoData({ ...videoData, description: e.target.value })}
-            required
-          ></textarea>
-        </div>
-        <button type="submit" className="bg-accent text-white font-bold py-2 px-4 rounded w-full hover:bg-teal-700">
-          Add Video
-        </button>
-      </form>
-    </div>
-  </div>
-)}
-
     </div>
   );
 };
