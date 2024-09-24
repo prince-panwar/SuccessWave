@@ -141,7 +141,7 @@ const DemoVideos = () => {
               <button 
                 onClick={() => router.push('/admin')} // Navigate to the admin page
                 className="block w-full text-left px-4 py-2 hover:bg-gray-200 transition duration-300">
-                Admin Page
+                Admin 
               </button>
             </div>
           )}
@@ -160,6 +160,8 @@ const DemoVideos = () => {
         <h1 className="text-4xl md:text-6xl font-bold">Welcome to Success Wave</h1>
         <p className="mt-4 text-lg md:text-xl text-light max-w-2xl">
           Discover our innovative EdTech platform and watch demo videos that show how we make learning engaging and impactful.
+          Affilate marketing and much more.
+          lets grow together.
         </p>
       </main>
 
