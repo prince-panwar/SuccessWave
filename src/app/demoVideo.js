@@ -162,6 +162,7 @@ const DemoVideos = () => {
           Discover our innovative EdTech platform and watch demo videos that show how we make learning engaging and impactful.
           Affilate marketing and much more.
           lets grow together.
+          Contact us for detailed and effective paid courses
         </p>
       </main>
 
