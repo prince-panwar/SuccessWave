@@ -2,8 +2,13 @@
 // components/DemoVideos.js
 import Image from 'next/image';
 import logoimg from "./logo.webp"
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 const DemoVideos = () => {
+    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+    const [adminCredentials, setAdminCredentials] = useState({ id: '', password: '' });
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [videoData, setVideoData] = useState({ link: '', description: '' });
+    const [videos, setVideos] = useState([]); // For storing the videos
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -37,8 +42,76 @@ const DemoVideos = () => {
           alert('Failed to send message.');
         }
       };
+      const loadVideos = async () => {
+        try {
+          const response = await fetch('/api/video');
+      
+          if (!response.ok) {
+            // If the response is not ok, throw an error with the status text
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+      
+          // Check if the response has content before parsing
+          const data = await response.text();  // Get raw text response
+          const videos = data ? JSON.parse(data) : [];  // Parse the JSON if there is data, otherwise use an empty array
+      
+          setVideos(videos);  // Set the parsed videos data to state
+          console.log(videos);  // Log the video data for debugging
+        } catch (error) {
+          console.error('Error loading videos:', error);
+        }
+      };
+      
+    
+    useEffect(()=>{
+    loadVideos()
+    },[])
+     
+    
+      const handleAdminLogin = (e) => {
+        e.preventDefault();
+        const { id, password } = adminCredentials;
+    
+        if (id === 'admin' && password === 'password123') { // Replace with your credentials
+          setIsAuthenticated(true);
+          setIsAdminModalOpen(false);
+        } else {
+          alert('Invalid credentials');
+        }
+      };
+    
+      const handleVideoSubmit = async (e) => {
+        e.preventDefault();
+    
+        const response = await fetch('/api/saveVideo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(videoData),
+        });
+    
+        if (response.ok) {
+          alert('Video added successfully');
+          setVideoData({ link: '', description: '' });
+          loadVideos(); // Reload videos after saving
+        } else {
+          alert('Failed to add video');
+        }
+      };
+    
+      // Open the admin modal
+  const openAdminModal = () => {
+    setIsAdminModalOpen(true);
+  };
+
+  // Close modal (either Admin Login or Video Modal)
+  const closeModal = () => {
+    setIsAdminModalOpen(false);
+    setIsAuthenticated(false);
+  };
+    
   return (
     <div className="min-h-screen bg-primary text-white">
+      {/* Header Section */}
       <header className="sticky top-0 z-50 bg-primary shadow-lg">
         <div className="container mx-auto flex items-center justify-between p-5">
           <div className="flex items-center space-x-3">
@@ -54,33 +127,24 @@ const DemoVideos = () => {
           </div>
 
           {/* Navigation Links */}
-          <nav>
-            <ul className="flex space-x-6">
-              <li>
-                <a
-                  href="#home"
-                  className="text-lg text-white hover:text-accent transition duration-300"
-                >
-                  Home
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#demos"
-                  className="text-lg text-white hover:text-accent transition duration-300"
-                >
-                  Demo Videos
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#contact"
-                  className="text-lg text-white hover:text-accent transition duration-300"
-                >
-                  Contact Us
-                </a>
-              </li>
-            </ul>
+          <nav className="flex items-center space-x-6">
+            <a href="#home" className="text-lg text-white hover:text-accent transition duration-300">
+              Home
+            </a>
+            <a href="#demos" className="text-lg text-white hover:text-accent transition duration-300">
+              Demo Videos
+            </a>
+            <a href="#contact" className="text-lg text-white hover:text-accent transition duration-300">
+              Contact Us
+            </a>
+
+            {/* Admin Button */}
+            <button
+              className="bg-accent text-white font-bold py-2 px-4 rounded hover:bg-teal-700"
+              onClick={openAdminModal}
+            >
+              Admin
+            </button>
           </nav>
         </div>
       </header>
@@ -100,36 +164,36 @@ const DemoVideos = () => {
         </p>
       </main>
 
-      {/* Demo Videos Section */}
-      <section id="demos" className="bg-white text-primary py-16 px-4 md:px-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">Our Demo Videos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-light p-4 rounded-lg shadow-lg">
-            <video controls className="w-full rounded-lg">
-              <source src="/demo1.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            <h3 className="text-xl font-semibold mt-4">Video Title 1</h3>
-            <p className="text-gray-700">Brief description of the demo video.</p>
-          </div>
-          <div className="bg-light p-4 rounded-lg shadow-lg">
-            <video controls className="w-full rounded-lg">
-              <source src="/demo2.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            <h3 className="text-xl font-semibold mt-4">Video Title 2</h3>
-            <p className="text-gray-700">Brief description of the demo video.</p>
-          </div>
-          <div className="bg-light p-4 rounded-lg shadow-lg">
-            <video controls className="w-full rounded-lg">
-              <source src="/demo3.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            <h3 className="text-xl font-semibold mt-4">Video Title 3</h3>
-            <p className="text-gray-700">Brief description of the demo video.</p>
-          </div>
+     {/* Demo Videos Section */}
+    
+
+  <section id="demos" className="bg-white text-primary py-16 px-4 md:px-16">
+  <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">Our Demo Videos</h2>
+
+  {/* List of Videos */}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {videos.map((video, index) => (
+      <div key={index} className="bg-white p-4 rounded-lg shadow-lg">
+        {/* Adjust aspect ratio for taller height */}
+        <div className="relative pb-[75%]"> {/* For 4:3 aspect ratio (height increased) */}
+          <iframe
+            className="absolute top-0 left-0 w-full h-full"
+            src={`https://www.youtube.com/embed/${video.link}?controls=0&modestbranding=1&rel=0`}
+            allow="encrypted-media"
+            allowFullScreen
+          ></iframe>
         </div>
-      </section>
+        <p className="mt-4 text-gray-700 truncate">
+          {video.description.length > 100
+            ? `${video.description.substring(0, 100)}...`
+            : video.description}
+        </p>
+      </div>
+    ))}
+  </div>
+</section>
+
+
       
        {/* Contact Us Section */}
        <footer id="contact" className="bg-accent py-8 text-center">
@@ -145,7 +209,7 @@ const DemoVideos = () => {
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              className="w-full p-2 border border-gray-300 rounded text-black bg-white"
               required
             />
           </div>
@@ -160,7 +224,7 @@ const DemoVideos = () => {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              className="w-full p-2 border border-gray-300 rounded text-black bg-white"
               required
             />
           </div>
@@ -174,7 +238,7 @@ const DemoVideos = () => {
               name="message"
               value={formData.message}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              className="w-full p-2 border border-gray-300 rounded text-black bg-white"
               rows="5"
               required
             />
@@ -190,7 +254,89 @@ const DemoVideos = () => {
 
         <p className="mt-4 text-light">&copy; 2024 Success Wave. All rights reserved.</p>
       </footer>
- 
+     {/* Admin Login Modal */}
+     {isAdminModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-black" onClick={closeModal}>
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-black">Admin Login</h2>
+            <form onSubmit={handleAdminLogin}>
+              <div className="mb-4">
+                <label className="block text-left text-black font-bold mb-2" htmlFor="adminId">
+                  Admin ID
+                </label>
+                <input
+                  id="adminId"
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded text-black"
+                  value={adminCredentials.id}
+                  onChange={(e) => setAdminCredentials({ ...adminCredentials, id: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-left text-black font-bold mb-2" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  className="w-full p-2 border border-gray-300 rounded text-black"
+                  value={adminCredentials.password}
+                  onChange={(e) => setAdminCredentials({ ...adminCredentials, password: e.target.value })}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-accent text-white font-bold py-2 px-4 rounded w-full hover:bg-teal-700"
+              >
+                Login
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Modal for Adding Video */}
+     {/* Admin Modal for Adding Video */}
+{isAuthenticated && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
+      <button className="absolute top-2 right-2 text-gray-500 hover:text-black" onClick={closeModal}>
+        &times;
+      </button>
+      <h2 className="text-xl font-bold mb-4 text-black">Add New Video</h2>
+      <form onSubmit={handleVideoSubmit}>
+        <div className="mb-4">
+          <label className="block text-left text-black font-bold mb-2">Video Link</label>
+          <input
+            type="text"
+            className="w-full p-2 border border-gray-300 rounded text-black" // Ensured text-black is applied
+            value={videoData.link}
+            onChange={(e) => setVideoData({ ...videoData, link: e.target.value })}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-left text-black font-bold mb-2">Description</label>
+          <textarea
+            className="w-full p-2 border border-gray-300 rounded text-black" // Ensured text-black is applied
+            value={videoData.description}
+            onChange={(e) => setVideoData({ ...videoData, description: e.target.value })}
+            required
+          ></textarea>
+        </div>
+        <button type="submit" className="bg-accent text-white font-bold py-2 px-4 rounded w-full hover:bg-teal-700">
+          Add Video
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

@@ -8,8 +8,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: '#1c3b51',  // Dark blue from the logo
+        accent: '#2b7a77',   // Teal color inspired by the wave
+        light: '#e6f7f7',    // Lighter shade for accents
+        white: '#ffffff',    // White for text and background
       },
     },
   },
